@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install pytest
+
+      - name: Run tests
+        run: python -m pytest tests/ -v
+
+  docker:
+    needs: test
+    uses: kse-whatisyouralibi/kse-labs-trusted-workflows/.github/workflows/docker-build.yaml@main
+    with:
+      image-name: custom-secret-detect
+      push: true
+      tags: "${{ github.sha }},latest"
+    permissions:
+      contents: read
+      packages: write
